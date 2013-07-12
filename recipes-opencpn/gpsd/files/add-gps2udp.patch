@@ -1,0 +1,55 @@
+--- gpsd-3.9.ori/SConstruct	2013-05-01 07:44:21.000000000 +0200
++++ gpsd-3.9/SConstruct	2013-06-28 11:57:12.000000000 +0200
+@@ -19,7 +19,7 @@
+ # * Out-of-directory builds: see http://www.scons.org/wiki/UsingBuildDir
+ 
+ # Release identification begins here
+-gpsd_version = "3.9"
++gpsd_version = "3.9+gps2udp"
+ 
+ # library version
+ libgps_version_current   = 20
+@@ -951,6 +951,9 @@
+ gpspipe = env.Program('gpspipe', ['gpspipe.c'], parse_flags=gpslibs)
+ env.Depends(gpspipe, compiled_gpslib)
+ 
++gps2udp = env.Program('gps2udp', ['gps2udp.c'], parse_flags=gpslibs)
++env.Depends(gps2udp, compiled_gpslib)
++
+ gpxlogger = env.Program('gpxlogger', ['gpxlogger.c'], parse_flags=gpslibs)
+ env.Depends(gpxlogger, compiled_gpslib)
+ 
+@@ -960,7 +963,7 @@
+ cgps = env.Program('cgps', ['cgps.c'], parse_flags=gpslibs + ncurseslibs)
+ env.Depends(cgps, compiled_gpslib)
+ 
+-binaries = [gpsd, gpsdecode, gpsctl, gpsdctl, gpspipe, gpxlogger, lcdgps]
++binaries = [gpsd, gpsdecode, gpsctl, gpsdctl, gpspipe, gps2udp, gpxlogger, lcdgps]
+ if ncurseslibs:
+     binaries += [cgps, gpsmon]
+ 
+@@ -1179,6 +1182,7 @@
+     "gpsctl.1" : "gpsctl.xml",
+     "gpsdctl.8" : "gpsdctl.xml",
+     "gpspipe.1" : "gpspipe.xml",
++    "gps2udp.1" : "gps2udp.xml",
+     "gpsdecode.1" : "gpsdecode.xml",
+     "srec.5" : "srec.xml",
+     }
+@@ -1224,7 +1228,7 @@
+ 
+ binaryinstall = []
+ binaryinstall.append(env.Install(installdir('sbindir'), [gpsd, gpsdctl]))
+-binaryinstall.append(env.Install(installdir('bindir'),  [gpsdecode, gpsctl, gpspipe, gpxlogger, lcdgps]))
++binaryinstall.append(env.Install(installdir('bindir'),  [gpsdecode, gpsctl, gpspipe, gps2udp, gpxlogger, lcdgps]))
+ if ncurseslibs:
+     binaryinstall.append(env.Install(installdir('bindir'), [cgps, gpsmon]))
+ binaryinstall.append(LibraryInstall(env, installdir('libdir'), compiled_gpslib))
+@@ -1330,6 +1334,7 @@
+     ('splint-gpsdctl',['gpsdctl.c'],'gpsdctl', ['']),
+     ('splint-gpsmon',gpsmon_sources,'gpsmon', ['-exportlocal']),
+     ('splint-gpspipe',['gpspipe.c'],'gpspipe', ['']),
++    ('splint-gps2udp',['gps2udp.c'],'gps2udp', ['']),
+     ('splint-gpsdecode',['gpsdecode.c'],'gpsdecode', ['']),
+     ('splint-gpxlogger',['gpxlogger.c'],'gpxlogger', ['']),
+     ('splint-test_packet',['test_packet.c'],'test_packet test harness', ['']),
