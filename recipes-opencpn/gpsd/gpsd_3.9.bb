@@ -54,7 +54,7 @@ do_compile_prepend() {
     export BUILD_SYS="${BUILD_SYS}"
     export HOST_SYS="${HOST_SYS}"
 
-    mv ${WORKDIR}/gps2udp.{c,xml} ${WORKDIR}/${PN}-${PV}/
+    cp ${WORKDIR}/gps2udp.{c,xml} ${WORKDIR}/${PN}-${PV}/
 }
 
 do_install() {
