@@ -31,7 +31,7 @@ USERADD_PACKAGES = "${PN}"
 
 # USERADD_PARAM specifies command line options to pass to the
 # useradd command.
-USERADD_PARAM_${PN} = "-d /home/opencpn -g 880 -G video,sudo,weston-launch -r -s /bin/bash -p cVI4BSxOSVDoM opencpn"
+USERADD_PARAM_${PN} = "-d /home/opencpn -g 880 -G audio,video,sudo,weston-launch -r -s /bin/bash -p cVI4BSxOSVDoM opencpn"
 
 # GROUPADD_PARAM works the same way, which you set to the options
 # you'd normally pass to the groupadd command. This will create

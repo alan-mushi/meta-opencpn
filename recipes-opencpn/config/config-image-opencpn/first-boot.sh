@@ -7,3 +7,7 @@ patch -p 1 < weston.mod
 patch -p 1 < sudoers.mod
 
 rm weston.mod sudoers.mod first-boot.sh
+
+echo "Press <enter> to reboot"
+read
+/sbin/reboot
