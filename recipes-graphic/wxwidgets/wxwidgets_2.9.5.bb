@@ -15,6 +15,8 @@ SRC_URI = "svn://svn.wxwidgets.org/svn/wx/wxWidgets/tags/;module=WX_2_9_5;protoc
            file://ax_check_gl.m4 \
            "
 
+SRC_URI += "${@base_contains("DISTRO_FEATURES", "wayland", "file://remove_x11_macro.patch", "", d)}"
+
 # for 'ac_raf_func_which_getservbyname_r.m4'
 SRC_URI[sha256sum] = "0099a0818673ccfea006fc1bbce98693e000d1385721b3a04d27cbbe16b043ff"
 # for 'gtk.m4'
@@ -75,16 +77,23 @@ do_configure () {
                 --disable-webview \
                 --disable-gtktest \
                 --disable-sdltest \
-                --disable-debug_flag
+                --enable-debug_gdb \
+                --disable-rpath
 }
 
 do_compile () {
-        cd ${S}
-        make ${PARALLEL_MAKE}
+        for i in ${S} ${S}/demos/ ${S}/samples/ ; do
+                cd $i
+                make ${PARALLEL_MAKE}
+        done
 }
 
 do_install () {
+        cd ${S}
         make install DESTDIR="${D}"
+        for i in $(find ${S}/demos/ ${S}/samples/ -type f -executable | egrep -v "\.[^/]+$") ; do
+                cp $i ${D}${bindir}
+        done
 }
 
 FILES_${PN} = "${bindir}/*"

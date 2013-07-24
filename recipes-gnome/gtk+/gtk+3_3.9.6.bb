@@ -2,7 +2,9 @@ require gtk+3.inc
 
 MAJ_VER = "${@oe.utils.trim_version("${PV}", 2)}"
 
-SRC_URI = "http://download.gnome.org/sources/gtk+/${MAJ_VER}/gtk+-${PV}.tar.xz"
+SRC_URI = "http://download.gnome.org/sources/gtk+/${MAJ_VER}/gtk+-${PV}.tar.xz \
+           file://width_root_window.patch \
+           "
 
 SRC_URI[md5sum] = "b99f61bbc72d866b19c7affe8b520ed8"
 SRC_URI[sha256sum] = "4d34b7cd763ca4975b8a55e587923eeefe7b3c8e08d3d01c9111900fca30c817"

@@ -1,0 +1,21 @@
+commit 285c85b830cb8b9f5c1c1cef7f9cc134cf993b0a
+Author: Thibaud Hulin <thibaudhulin@thibaudhulin@aol.com>
+Date:   Tue Jul 23 12:04:00 2013 +0200
+
+    Init root window width to 1 to avoid mmap fails in gdk/wayland/gdkwindow-wayland.c
+
+diff --git a/gdk/wayland/gdkscreen-wayland.c b/gdk/wayland/gdkscreen-wayland.c
+index 49f6638..33e0752 100644
+--- a/gdk/wayland/gdkscreen-wayland.c
++++ b/gdk/wayland/gdkscreen-wayland.c
+@@ -789,8 +789,8 @@ _gdk_wayland_screen_new (GdkDisplay *display)
+ 
+   screen_wayland = GDK_WAYLAND_SCREEN (screen);
+   screen_wayland->display = display;
+-  screen_wayland->width = 0;
+-  screen_wayland->height = 0;
++  screen_wayland->width = 1;
++  screen_wayland->height = 1;
+ 
+   screen_wayland->visual = gdk_wayland_visual_new (screen);
+ 
