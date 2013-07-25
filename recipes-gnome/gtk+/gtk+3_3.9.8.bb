@@ -6,8 +6,8 @@ SRC_URI = "http://download.gnome.org/sources/gtk+/${MAJ_VER}/gtk+-${PV}.tar.xz \
            file://width_root_window.patch \
            "
 
-SRC_URI[md5sum] = "b99f61bbc72d866b19c7affe8b520ed8"
-SRC_URI[sha256sum] = "4d34b7cd763ca4975b8a55e587923eeefe7b3c8e08d3d01c9111900fca30c817"
+SRC_URI[md5sum] = "5243b4a63efc454b41bd24d4ffbf4342"
+SRC_URI[sha256sum] = "a2053a9556c600e0217ec48df75e96aad909f3bc4ec307d2e04817ac548d39a8"
 
 S = "${WORKDIR}/gtk+-${PV}"
 

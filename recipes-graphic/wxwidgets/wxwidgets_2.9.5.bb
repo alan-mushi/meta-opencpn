@@ -13,9 +13,8 @@ PR = "r0"
 SRC_URI = "svn://svn.wxwidgets.org/svn/wx/wxWidgets/tags/;module=WX_2_9_5;protocol=http \
            file://tiff_m4_acinclude_remove_AX_CHECK_GL.patch \
            file://ax_check_gl.m4 \
+           file://keysim_gtk_prevent_assert_error.patch \
            "
-
-SRC_URI += "${@base_contains("DISTRO_FEATURES", "wayland", "file://remove_x11_macro.patch", "", d)}"
 
 # for 'ac_raf_func_which_getservbyname_r.m4'
 SRC_URI[sha256sum] = "0099a0818673ccfea006fc1bbce98693e000d1385721b3a04d27cbbe16b043ff"
