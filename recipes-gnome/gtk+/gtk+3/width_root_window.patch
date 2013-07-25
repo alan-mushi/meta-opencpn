@@ -1,5 +1,5 @@
 commit 285c85b830cb8b9f5c1c1cef7f9cc134cf993b0a
-Author: Thibaud Hulin <thibaudhulin@thibaudhulin@aol.com>
+Author: Thibaud Hulin <thibaudhulin@aol.com>
 Date:   Tue Jul 23 12:04:00 2013 +0200
 
     Init root window width to 1 to avoid mmap fails in gdk/wayland/gdkwindow-wayland.c
