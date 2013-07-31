@@ -21,6 +21,8 @@ SRC_URI[sha256sum] = "0099a0818673ccfea006fc1bbce98693e000d1385721b3a04d27cbbe16
 # for 'gtk.m4'
 SRC_URI[sha256sum] = "4d1af176791f63e35b879b470b2d391e30ef7135a37c47571122df8134ca3114"
 
+inherit binconfig
+
 S = "${WORKDIR}/WX_2_9_5"
 SRCREV_default_pn-${PN} = "74573"
 
