@@ -97,6 +97,6 @@ do_install () {
         done
 }
 
-FILES_${PN} = "${bindir}/*"
-FILES_${PN}-dev = " ${libdir}/wx/* ${libdir}/libwx* ${datadir}/bakefile/* ${datadir}/aclocal/*"
-FILES_${PN}-dbg = "${libdir}/.debug/libwx* ${prefix}/src/* ${includedir}/* ${bindir}/.debug/*"
+FILES_${PN} = "${bindir}/* ${libdir}/wx/* ${libdir}/libwx*"
+FILES_${PN}-dev = " ${datadir}/bakefile/* ${datadir}/aclocal/* ${prefix}/src/* ${includedir}/*"
+FILES_${PN}-dbg = "${libdir}/.debug/libwx* ${bindir}/.debug/*"
