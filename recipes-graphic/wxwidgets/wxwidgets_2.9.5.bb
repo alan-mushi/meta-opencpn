@@ -80,7 +80,12 @@ autotools_do_configure () {
 do_compile_append () {
 	# The wx-config file in ${S} is actully a "proxy script" so let's overrides it with the final script.
 	# Isolate the path of the actual script.
-	wx_config_path=$(sed -n 38p ${S}/wx-config |sed "s/\$this_exec_prefix\///g" | cut -d \" -f 2)
+	if [ -f ${S}/wx-config.old ] ; then
+		wx_config_path=$(sed -n 38p ${S}/wx-config.old |sed "s/\$this_exec_prefix\///g" | cut -d \" -f 2)
+	else
+		wx_config_path=$(sed -n 38p ${S}/wx-config |sed "s/\$this_exec_prefix\///g" | cut -d \" -f 2)
+		mv ${S}/wx-config ${S}/wx-config.old
+	fi
 	cp -f ${S}/$wx_config_path ${S}/wx-config
 }
 
