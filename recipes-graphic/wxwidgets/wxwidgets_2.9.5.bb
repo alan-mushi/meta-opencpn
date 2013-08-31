@@ -21,55 +21,21 @@ SRC_URI[sha256sum] = "0099a0818673ccfea006fc1bbce98693e000d1385721b3a04d27cbbe16
 # for 'gtk.m4'
 SRC_URI[sha256sum] = "4d1af176791f63e35b879b470b2d391e30ef7135a37c47571122df8134ca3114"
 
-inherit binconfig
+inherit binconfig autotools
 
 S = "${WORKDIR}/WX_2_9_5"
 SRCREV_default_pn-${PN} = "74573"
 
 RDEPENDS_${PN} = "gtk+3"
 
-DEPENDS = "cppunit libsdl gtk+ gtk+3 autoconf-archive"
+DEPENDS = "cppunit libsdl gtk+ gtk+3 autoconf-archive libglu bakefile"
 
 PACKAGES = "${PN} ${PN}-dev ${PN}-dbg"
 
-cp_macro () {
-        cp ${WORKDIR}/ax_check_gl.m4 ${S}/src/tiff/m4/
-}
+# Otherwise the .m4 files in build/aclocal can't be found.
+EXTRA_AUTORECONF = "-I ${S}/build/aclocal -I ${S}/aclocal-copy"
 
-do_patch_append () {
-    bb.build.exec_func('cp_macro', d)
-}
-
-do_configure () {
-        ${S}/autogen.sh
-
-        cd ${S}/src/tiff/
-        sed -i "5s/^/#/" ${S}/src/tiff/autogen.sh
-        ${S}/src/tiff/autogen.sh
-        cd ${S}
-        
-        ${S}/configure \
-                --build=${BUILD_SYS} \
-		--host=${HOST_SYS} \
-		--target=${TARGET_SYS} \
-		--prefix=${prefix} \
-		--exec_prefix=${exec_prefix} \
-		--bindir=${bindir} \
-		--sbindir=${sbindir} \
-		--libexecdir=${libexecdir} \
-		--datadir=${datadir} \
-		--sysconfdir=${sysconfdir} \
-		--sharedstatedir=${sharedstatedir} \
-		--localstatedir=${localstatedir} \
-		--libdir=${libdir} \
-		--includedir=${includedir} \
-		--oldincludedir=${oldincludedir} \
-		--infodir=${infodir} \
-		--mandir=${mandir} \
-		--disable-silent-rules \
-                --disable-dependency-tracking \
-                --with-libtool-sysroot=${sysroot} \
-                --with-gtk=3 \
+EXTRA_OECONF = "--with-gtk=3 \
                 --enable-utf8 \
                 --enable-stl \
                 --disable-display \
@@ -78,24 +44,47 @@ do_configure () {
                 --disable-webview \
                 --disable-gtktest \
                 --disable-sdltest \
-                --enable-debug_gdb \
-                --disable-rpath
+                --disable-rpath"
+
+PACKAGECONFIG = "${@base_contains('DISTRO_FEATURES', 'x11', 'x11', '', d)}"
+PACKAGECONFIG = "${@base_contains('DISTRO_FEATURES', 'opengl', 'opengl', '', d)}"
+PACKAGECONFIG = "${@base_contains('DISTRO_FEATURES', 'wayland', 'wayland', '', d)}"
+PACKAGECONFIG[x11] = "--with-x, --with-x=no, "
+PACKAGECONFIG[opengl] = "--with-opengl, --with-opengl=no , virtual/libgl"
+PACKAGECONFIG[wayland] = "--with-x=no, , "
+
+cp_macro () {
+        cp ${WORKDIR}/ax_check_gl.m4 ${S}/src/tiff/m4/
 }
 
-do_compile () {
-        for i in ${S} ${S}/demos/ ${S}/samples/ ; do
-                cd $i
-                make ${PARALLEL_MAKE}
-        done
+# Moves the macro at the appropriate location.
+do_patch_append () {
+    bb.build.exec_func('cp_macro', d)
 }
 
-do_install () {
-        cd ${S}
-        make install DESTDIR="${D}"
-        for i in $(find ${S}/demos/ ${S}/samples/ -type f -executable | egrep -v "\.[^/]+$") ; do
-                cp $i ${D}${bindir}
-        done
+# We're obliged to overrides this because any call to autoheader
+# will result in "heavy failures".
+autotools_do_configure () {
+	${S}/autogen.sh
+
+        cd ${S}/src/tiff/
+        sed -i "5s/^autoheader/#autoheader/" ${S}/src/tiff/autogen.sh
+        ${S}/src/tiff/autogen.sh
+
+	if [ -e ${S}/configure ]; then
+		cd ${S}
+		oe_runconf
+	fi
 }
+
+do_compile_append () {
+	# The wx-config file in ${S} is actully a "proxy script" so let's overrides it with the final script.
+	# Isolate the path of the actual script.
+	wx_config_path=$(sed -n 38p ${S}/wx-config |sed "s/\$this_exec_prefix\///g" | cut -d \" -f 2)
+	cp -f ${S}/$wx_config_path ${S}/wx-config
+}
+
+INSANE_SKIP_${PN} = "dev-so"
 
 FILES_${PN} = "${bindir}/* ${libdir}/wx/* ${libdir}/libwx*"
 FILES_${PN}-dev = " ${datadir}/bakefile/* ${datadir}/aclocal/* ${prefix}/src/* ${includedir}/*"
