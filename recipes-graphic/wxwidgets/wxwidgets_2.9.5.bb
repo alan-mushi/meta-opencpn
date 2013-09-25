@@ -33,7 +33,8 @@ DEPENDS = "cppunit libsdl gtk+ gtk+3 autoconf-archive libglu bakefile"
 PACKAGES = "${PN} ${PN}-dev ${PN}-dbg"
 
 # Otherwise the .m4 files in build/aclocal can't be found.
-EXTRA_AUTORECONF = "-I ${S}/build/aclocal -I ${S}/aclocal-copy"
+#EXTRA_AUTORECONF = "-I ${S}/build/aclocal -I ${S}/aclocal-copy"
+#EXTRA_OEMAKE = "samples"
 
 EXTRA_OECONF = "--with-gtk=3 \
                 --enable-utf8 \
@@ -78,6 +79,11 @@ autotools_do_configure () {
 }
 
 do_compile_append () {
+	# Building the examples
+	for i in ${S}/samples ${S}/demos ; do
+		cd $i && make ${PARALLEL_MAKE}
+	done
+
 	# The wx-config file in ${S} is actully a "proxy script" so let's overrides it with the final script.
 	# Isolate the path of the actual script.
 	if [ -f ${S}/wx-config.old ] ; then
@@ -87,6 +93,12 @@ do_compile_append () {
 		mv ${S}/wx-config ${S}/wx-config.old
 	fi
 	cp -f ${S}/$wx_config_path ${S}/wx-config
+}
+
+do_install_append () {
+	for i in $(find ${S}/demos/ ${S}/samples/ -type f -executable | egrep -v "\.[^/]+$") ; do
+		cp $i ${D}${bindir}
+	done
 }
 
 INSANE_SKIP_${PN} = "dev-so"
