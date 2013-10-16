@@ -22,15 +22,18 @@ do_compile() {
 
 	cd ${S}/examples/
 	ln -fs ../libEGLX.so ../EGLX*.h .
+	$CC -c -fPIC jwzgles.c -o jwzgles.o -DHAVE_JWZGLES -I${STAGING_INCDIR}
+	$CC -shared -Wl,-soname,jwzgles.so -o jwzgles.so jwzgles.o -lc
 	$CC glxgears.c jwzgles.c -o glxgears `pkg-config --cflags --libs wayland-client wayland-egl egl glesv1_cm gtk+-3.0` libEGLX.so -DHAVE_JWZGLES -DGL_VERSION_ES_CM_1_0 -lm -I${STAGING_INCDIR} -I${S} -I${STAGING_LIBDIR} -L${STAGING_LIBDIR}
+	rm jwzgles.o
 }
 
 do_install() {
 	install -d ${D}${libdir} ${D}${includedir} ${D}${bindir}
-	cp ${S}/libEGLX.so ${D}${libdir}
-	cp ${S}/EGLX*.h ${D}${includedir}
+	cp ${S}/libEGLX.so ${S}/examples/jwzgles.so ${D}${libdir}
+	cp ${S}/EGLX*.h ${S}/examples/jwzgles*.h ${D}${includedir}
 	cp ${S}/examples/glxgears ${D}${bindir}
 }
 
-FILES_${PN} = "${libdir}/libEGLX.so ${bindir}/glxgears"
-FILES_${PN}-dev = "${includedir}/EGLX*.h"
+FILES_${PN} = "${libdir}/libEGLX.so ${libdir}/jwzgles.so ${bindir}/glxgears"
+FILES_${PN}-dev = "${includedir}/EGLX*.h ${includedir}/jwzgles*.h"
