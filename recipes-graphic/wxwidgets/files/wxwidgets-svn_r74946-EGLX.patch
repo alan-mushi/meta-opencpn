@@ -1,0 +1,109 @@
+--- ../src/gtk/glcanvas.cpp	2013-09-30 01:10:00.000000000 +0200
++++ ../src/gtk/glcanvas.cpp	2013-10-07 11:55:37.000000000 +0200
+@@ -16,7 +16,9 @@
+ #include "wx/glcanvas.h"
+ 
+ #include <gtk/gtk.h>
++#ifdef GDK_WINDOWING_X11
+ #include <gdk/gdkx.h>
++#endif
+ #include "wx/gtk/private/gtk2-compat.h"
+ 
+ #if WXWIN_COMPATIBILITY_2_8
+@@ -117,10 +119,16 @@
+     {
+         const XVisualInfo* xvi = win->GetXVisualInfo();
+         GdkVisual* visual = gtk_widget_get_visual(win->m_wxwindow);
++#ifdef GDK_WINDOWING_X11
+         if (GDK_VISUAL_XVISUAL(visual)->visualid != xvi->visualid)
+         {
++#endif
+             GdkScreen* screen = gtk_widget_get_screen(win->m_wxwindow);
++#if defined GDK_WINDOWING_X11
+             visual = gdk_x11_screen_lookup_visual(screen, xvi->visualid);
++#elif defined GDK_WINDOWING_WAYLAND
++            visual = gdk_screen_get_system_visual (screen);
++#endif
+ #ifdef __WXGTK3__
+             gtk_widget_set_visual(win->m_wxwindow, visual);
+ #else
+@@ -128,7 +136,9 @@
+             gtk_widget_set_colormap(win->m_wxwindow, colormap);
+             g_object_unref(colormap);
+ #endif
++#ifdef GDK_WINDOWING_X11
+         }
++#endif
+         // remove hook
+         return false;
+     }
+--- ../src/gtk/utilsgtk.cpp	2013-09-30 01:15:27.000000000 +0200
++++ ../src/gtk/utilsgtk.cpp	2013-10-07 11:56:13.000000000 +0200
+@@ -32,6 +32,12 @@
+ #ifdef GDK_WINDOWING_X11
+ #include <gdk/gdkx.h>
+ #endif
++#ifdef GDK_WINDOWING_WAYLAND
++extern "C" {
++#include "EGLX.h"
++#include "EGLX-gtkx11.h"
++}
++#endif
+ 
+ #if wxDEBUG_LEVEL
+     #include "wx/gtk/assertdlg_gtk.h"
+@@ -74,7 +80,7 @@
+ // display characteristics
+ // ----------------------------------------------------------------------------
+ 
+-#ifdef GDK_WINDOWING_X11
++#if defined GDK_WINDOWING_X11 || defined GDK_WINDOWING_WAYLAND
+ void *wxGetDisplay()
+ {
+     return GDK_DISPLAY_XDISPLAY(gtk_widget_get_display(wxGetRootWindow()));
+--- ../src/common/glcmn.cpp	2013-09-30 01:22:31.000000000 +0200
++++ ../src/common/glcmn.cpp	2013-10-07 11:57:55.000000000 +0200
+@@ -88,7 +88,9 @@
+             wxLogError(_("Failed to allocate colour for OpenGL"));
+             return false;
+         }
+
++#if !defined HAVE_JWZGLES
+         glIndexi(pix);
++#endif
+     }
+ #endif
+     return true;
+--- ../include/wx/glcanvas.h	2013-09-30 01:30:13.000000000 +0200
++++ ../include/wx/glcanvas.h	2013-10-07 12:10:24.000000000 +0200
+@@ -22,6 +22,14 @@
+ class WXDLLIMPEXP_FWD_GL wxGLCanvas;
+ class WXDLLIMPEXP_FWD_GL wxGLContext;
+ 
++#include <GLES/gl.h>
++#define HAVE_JWZGLES
++extern "C" {
++#include "jwzgles.h"
++#include "EGLX.h"
++#include "EGLX-gtkx11.h"
++}
++
+ // ----------------------------------------------------------------------------
+ // Constants for attributes list
+ // ----------------------------------------------------------------------------
+--- ../include/wx/unix/glx11.h	2013-09-30 01:37:29.000000000 +0200
++++ ../include/wx/unix/glx11.h	2013-10-07 12:11:42.000000000 +0200
+@@ -10,7 +10,13 @@
+ #ifndef _WX_UNIX_GLX11_H_
+ #define _WX_UNIX_GLX11_H_
+ 
++#if 0
+ #include <GL/glx.h>
++#else
++extern "C" {
++#include "EGLX.h"
++}
++#endif
+ 
+ // ----------------------------------------------------------------------------
+ // wxGLContext

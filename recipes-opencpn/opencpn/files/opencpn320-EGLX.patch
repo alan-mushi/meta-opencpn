@@ -1,0 +1,1145 @@
+--- ../CMakeLists.txt	2013-02-26 21:29:24.000000000 +0100
++++ ../CMakeLists.txt	2013-10-07 13:38:43.000000000 +0200
+@@ -32,7 +32,7 @@
+ 
+ # define minimum cmake version
+ CMAKE_MINIMUM_REQUIRED(VERSION 2.6.2)
+-# This should be 2.8.0 to have FindGTK2 module
++# This should be 2.8.0 to have FindGTK3 module
+ IF (COMMAND cmake_policy)
+   CMAKE_POLICY(SET CMP0003 OLD)
+   CMAKE_POLICY(SET CMP0005 OLD)
+@@ -67,7 +67,7 @@
+   SET (LIB_INSTALL_DIR "lib")
+   IF (EXISTS /etc/debian_version)
+     SET (PACKAGE_FORMAT "DEB")
+-    SET (PACKAGE_DEPS "libc6, libwxgtk2.8-0 (>= 2.8.7.1), libglu1-mesa (>= 7.0.0), libgl1-mesa-glx (>= 7.0.0), zlib1g, bzip2, libtinyxml2.6.2, libportaudio2")
++    SET (PACKAGE_DEPS "libc6, libwxgtk2.8-0 (>= 2.8.7.1), zlib1g, bzip2, libtinyxml2.6.2, libportaudio2")
+     SET (PACKAGE_RECS "xcalib")
+     SET (LIB_INSTALL_DIR "lib")
+     IF (CMAKE_SIZEOF_VOID_P MATCHES "8")
+@@ -130,7 +130,7 @@
+ SET(wxWidgets_USE_LIBS base core net xml html adv aui)
+ 
+ FIND_PACKAGE(OpenGL REQUIRED)
+-IF(OPENGL_GLU_FOUND)
++IF(OPENGL_FOUND)
+ 
+     SET(wxWidgets_USE_LIBS ${wxWidgets_USE_LIBS} gl )
+     INCLUDE_DIRECTORIES(${OPENGL_INCLUDE_DIR})
+@@ -139,9 +139,9 @@
+     MESSAGE (STATUS "    Lib: " ${OPENGL_LIBRARIES})
+     MESSAGE (STATUS "    Include: " ${OPENGL_INCLUDE_DIR})
+ 
+-ELSE(OPENGL_GLU_FOUND)
++ELSE(OPENGL_FOUND)
+     MESSAGE (STATUS "OpenGL not found..." )
+-ENDIF(OPENGL_GLU_FOUND)
++ENDIF(OPENGL_FOUND)
+ 
+ # Find wxWidgets here, and the setting get inherited by all plugins.
+ # These options can be used to set the linux widgets build type
+@@ -155,8 +155,8 @@
+     MESSAGE (STATUS "Found wxWidgets..." )
+     MESSAGE (STATUS "${wxWidgets_LIBRARIES}")
+ 
+-#  Search for wxWidgets 2.9
+-STRING(REGEX MATCHALL "2.9" wx_Version "${wxWidgets_INCLUDE_DIRS}")
++#  Search for wxWidgets 3.0
++STRING(REGEX MATCHALL "3.0" wx_Version "${wxWidgets_INCLUDE_DIRS}")
+ 
+ 
+ MESSAGE (STATUS "")
+@@ -181,12 +181,12 @@
+ #TODO: Should we use  -fno-stack-protector
+ #  IF NOT DEBUGGING CFLAGS="-O2 -march=native"
+ IF(NOT WIN32)
+-  ADD_DEFINITIONS( "-Wall -Wno-unused -fexceptions -rdynamic" )
++  ADD_DEFINITIONS( "-Wall -Wno-unused -fexceptions -fpermissive -rdynamic -DHAVE_JWZGLES -DGL_VERSION_ES_CM_1_0" )
+   ADD_DEFINITIONS( " -g -fno-strict-aliasing")
+ ENDIF(NOT WIN32)
+ 
+ # Add some definitions to satisfy MS
+-ADD_DEFINITIONS(-DUSE_GLU_TESS)
++#ADD_DEFINITIONS(-DUSE_GLU_TESS)
+ IF(WIN32)
+     ADD_DEFINITIONS(-D__MSVC__)
+     ADD_DEFINITIONS(-D_CRT_NONSTDC_NO_DEPRECATE -D_CRT_SECURE_NO_DEPRECATE)
+@@ -201,22 +201,35 @@
+ 
+ IF (NOT WIN32 AND NOT APPLE)
+ 
+-FIND_PACKAGE(GTK2 2.6)
+-IF (GTK2_FOUND)
+-    MESSAGE (STATUS "Found GTK2")
++#FIND_PACKAGE(GTK2 2.6)
++#IF (GTK2_FOUND)
++#    MESSAGE (STATUS "Found GTK2")
++#    ADD_DEFINITIONS(-DocpnUSE_GTK_OPTIMIZE)
++#    ADD_DEFINITIONS(-DocpnHAS_GTK)
++#    INCLUDE_DIRECTORIES(${GTK2_INCLUDE_DIRS})
++#    SET(EXTRA_LIBS ${EXTRA_LIBS} ${GTK2_LIBRARIES})
++
++FIND_PACKAGE(GTK3)
++IF (GTK3_FOUND)
++    MESSAGE (STATUS "Found GTK3")
+     ADD_DEFINITIONS(-DocpnUSE_GTK_OPTIMIZE)
+     ADD_DEFINITIONS(-DocpnHAS_GTK)
+-    INCLUDE_DIRECTORIES(${GTK2_INCLUDE_DIRS})
+-    SET(EXTRA_LIBS ${EXTRA_LIBS} ${GTK2_LIBRARIES})
++    INCLUDE_DIRECTORIES(${GTK3_INCLUDE_DIRS})
++    SET(EXTRA_LIBS ${EXTRA_LIBS} ${GTK3_LIBRARIES})
+ 
+     # Add a definition to satisfy some linux system builds, avoiding Apple builds
+     IF (NOT WIN32 AND NOT APPLE)
+-       ADD_DEFINITIONS("`pkg-config --cflags --libs gtk+-2.0`")
++       ADD_DEFINITIONS("$(pkg-config --cflags --libs gtk+-3.0 egl wayland-egl) -lEGLX -ljwzgles")
++       #ADD_DEFINITIONS("`pkg-config --cflags --libs gtk+-2.0`")
+     ENDIF (NOT WIN32 AND NOT APPLE)
+ 
+-ELSE(GTK2_FOUND)
+-    MESSAGE (STATUS "GTK2 Not found...")
+-ENDIF (GTK2_FOUND)
++ELSE(GTK3_FOUND)
++    MESSAGE (STATUS "GTK3 Not found...")
++ENDIF (GTK3_FOUND)
++
++#ELSE(GTK2_FOUND)
++#    MESSAGE (STATUS "GTK2 Not found...")
++#ENDIF (GTK2_FOUND)
+ 
+ IF(UNIX)
+ INCLUDE("FindPortaudio.cmake")
+@@ -403,11 +416,11 @@
+         src/multiplexer.cpp
+     )
+ 
+-IF(wx_Version MATCHES "2.9")
+-ELSE(wx_Version MATCHES "2.9")
++IF(wx_Version MATCHES "3.0")
++ELSE(wx_Version MATCHES "3.0")
+   SET(HDRS ${HDRS} include/scrollingdialog.h )
+   SET(SRCS ${SRCS} src/scrollingdialog.cpp)
+-ENDIF(wx_Version MATCHES "2.9")
++ENDIF(wx_Version MATCHES "3.0")
+ 
+ SET( PACKAGE_HEADERS "" )
+ 
+@@ -679,6 +692,9 @@
+     )
+ ENDIF(APPLE)
+ 
++SET (MYLIBS "-lEGLX -ljwzgles -lEGL -lwayland-client -lwayland-egl -lGLESv1_CM")
++SET(OPENGL_LIBRARIES ${OPENGL_LIBRARIES} ${MYLIBS})
++
+ #  Mac has trouble finding libgobject-2.0.dylib
+ #  We look for it explicitely
+ IF(APPLE)
+
+--- ../include/dychart.h	2013-10-07 13:50:34.000000000 +0200
++++ ../include/dychart.h	2013-10-07 13:56:12.000000000 +0200
+@@ -214,14 +214,22 @@
+ #ifndef OCPN_GL_INCLUDES
+ #define OCPN_GL_INCLUDES 1
+ 
+-#ifdef __WXMSW__
++#if defined __WXMSW__
+ #include "GL/gl.h"            // local copy for Windows
+ #include "GL/glu.h"
+-#else
++#elif defined __WXGTK__
++#  if defined GDK_WINDOWING_X11
+ //#include <GL/glew.h>
+ #include <GL/gl.h>
+ #include <GL/glu.h>
+ #include <GL/glext.h>
++#  elif defined GDK_WINDOWING_WAYLAND
++extern "C" {
++#include <GLES/gl.h>
++#define HAVE_JWZGLES
++#include "jwzgles.h"
++}
++#  endif
+ #endif
+ 
+ #endif      //OCPN_GL_INCLUDES
+--- ../src/chart1.cpp	2013-10-07 14:16:49.000000000 +0200
++++ ../src/chart1.cpp	2013-10-07 14:40:28.000000000 +0200
+@@ -801,6 +801,11 @@
+ 
+ bool MyApp::OnInit()
+ {
++#ifdef GDK_WINDOWING_WAYLAND
++     /* main entry point for the EGLX wrapper */
++    EGLX_main(0);
++#endif
++
+     if( !wxApp::OnInit() ) return false;
+ 
+ //    bells_sound[0].Create(_T("/home/dsr/2bells.wav"));
+@@ -1076,7 +1081,6 @@
+ #ifdef __WXMSW__
+     g_Plugin_Dir += _T("\\plugins");             // Windows: {exe dir}/plugins
+ #endif
+-
+     if( g_bportable ) {
+         g_Plugin_Dir = *pHome_Locn;
+         g_Plugin_Dir += _T("plugins");
+@@ -1263,7 +1267,7 @@
+     //    Always use dot as decimal
+     setlocale( LC_NUMERIC, "C" );
+ 
+-    wxLog::SetVerbose( false );           // log no verbose messages
++    wxLog::SetVerbose( true );           // log verbose messages
+ 
+     //  French language locale is assumed to include the AZERTY keyboard
+     //  This applies to either the system language, or to OpenCPN language selection
+@@ -7200,7 +7204,9 @@
+         int gsy = cc1->GetglCanvas()->GetSize().y;
+ 
+         unsigned char *buffer = (unsigned char *)malloc( gsx * gsy * 3 );
++#if !defined HAVE_JWZGLES
+         glReadPixels(0, 0, gsx, gsy, GL_RGB, GL_UNSIGNED_BYTE, buffer );
++#endif
+         wxImage image( gsx,gsy );
+         image.SetData(buffer);
+         wxImage mir_imag = image.Mirror( false );
+--- ../src/chcanv.cpp	2013-10-07 14:41:46.000000000 +0200
++++ ../src/chcanv.cpp	2013-10-07 15:24:12.000000000 +0200
+@@ -380,6 +380,7 @@
+ };
+ 
+ 
++#if !defined HAVE_JWZGLES
+ PFNGLGENFRAMEBUFFERSEXTPROC         s_glGenFramebuffersEXT;
+ PFNGLGENRENDERBUFFERSEXTPROC        s_glGenRenderbuffersEXT;
+ PFNGLFRAMEBUFFERTEXTURE2DEXTPROC    s_glFramebufferTexture2DEXT;
+@@ -390,6 +391,7 @@
+ PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC  s_glCheckFramebufferStatusEXT;
+ PFNGLDELETEFRAMEBUFFERSEXTPROC      s_glDeleteFramebuffersEXT;
+ PFNGLDELETERENDERBUFFERSEXTPROC     s_glDeleteRenderbuffersEXT;
++#endif
+ 
+ #ifdef __WXMSW__
+ HINSTANCE s_hGL_DLL;                   // Handle to DLL
+@@ -426,7 +428,7 @@
+     return false;
+ 
+ #else
+-
++#if !defined HAVE_JWZGLES
+     s_glGenFramebuffersEXT = (PFNGLGENFRAMEBUFFERSEXTPROC)glXGetProcAddress((const GLubyte *)"glGenFramebuffersEXT");
+     s_glGenRenderbuffersEXT = (PFNGLGENRENDERBUFFERSEXTPROC)glXGetProcAddress((const GLubyte *)"glGenRenderbuffersEXT");
+     s_glFramebufferTexture2DEXT = (PFNGLFRAMEBUFFERTEXTURE2DEXTPROC)glXGetProcAddress((const GLubyte *)"glFramebufferTexture2DEXT");
+@@ -438,7 +440,9 @@
+     s_glDeleteFramebuffersEXT = (PFNGLDELETEFRAMEBUFFERSEXTPROC)glXGetProcAddress((const GLubyte *)"glDeleteFramebuffersEXT");
+     s_glDeleteRenderbuffersEXT = (PFNGLDELETERENDERBUFFERSEXTPROC)glXGetProcAddress((const GLubyte *)"glDeleteRenderbuffersEXT");
+ #endif
++#endif
+ 
++#if !defined HAVE_JWZGLES
+     if( NULL == s_glGenFramebuffersEXT ) return false;
+     if( NULL == s_glGenRenderbuffersEXT ) return false;
+     if( NULL == s_glFramebufferTexture2DEXT ) return false;
+@@ -449,6 +453,7 @@
+     if( NULL == s_glCheckFramebufferStatusEXT ) return false;
+     if( NULL == s_glDeleteFramebuffersEXT ) return false;
+     if( NULL == s_glDeleteRenderbuffersEXT ) return false;
++#endif
+ 
+     return true;
+ }
+@@ -466,7 +471,11 @@
+ 
+     extNameLen = strlen( extName );
+ 
++#if !defined HAVE_JWZGLES
+     p = (char *) glGetString( GL_EXTENSIONS );
++#else
++    p = "";
++#endif
+     if( NULL == p ) {
+         return GL_FALSE;
+     }
+@@ -10761,7 +10770,9 @@
+     else if(0/*b_useTexRect*/)
+     {
+         int w = pemboss->width, h = pemboss->height;
++#if !defined HAVE_JWZGLES
+         glEnable(GL_TEXTURE_RECTANGLE_ARB);
++#endif
+ 
+         // render using opengl and alpha blending
+         if(!pemboss->gltexind) { /* upload to texture */
+@@ -10774,14 +10785,18 @@
+             }
+ 
+             glGenTextures(1, &pemboss->gltexind);
++#if !defined HAVE_JWZGLES
+             glBindTexture(GL_TEXTURE_RECTANGLE_ARB, pemboss->gltexind);
+             glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE_ALPHA, w, h,
+                          0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
++#endif
+ 
+             delete [] data;
+         }
+ 
++#if !defined HAVE_JWZGLES
+         glBindTexture(GL_TEXTURE_RECTANGLE_ARB, pemboss->gltexind);
++#endif
+ 
+         glEnable(GL_BLEND);
+         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+@@ -10790,14 +10805,18 @@
+         glColor4f(1, 1, 1, factor / 256);
+ 
+         glBegin(GL_QUADS);
++#if !defined HAVE_JWZGLES
+         glTexCoord2i(0, 0), glVertex2i(x, y);
+         glTexCoord2i(w, 0), glVertex2i(x+w, y);
+         glTexCoord2i(w, h), glVertex2i(x+w, y+h);
+         glTexCoord2i(0, h), glVertex2i(x, y+h);
++#endif
+         glEnd();
+ 
+         glDisable(GL_BLEND);
++#if !defined HAVE_JWZGLES
+         glDisable(GL_TEXTURE_RECTANGLE_ARB);
++#endif
+     }
+ #endif
+     else {
+@@ -11986,7 +12005,9 @@
+         SetSize( VP.pix_width, VP.pix_height );
+         if( m_bsetup && m_b_useFBO ) {
+             BuildFBO();
++#if !defined HAVE_JWZGLES
+             ( *s_glBindFramebufferEXT )( GL_FRAMEBUFFER_EXT, 0 );
++#endif
+         }
+ 
+     }
+@@ -12002,19 +12023,23 @@
+ {
+     if( m_bsetup && m_b_useFBO ) {
+         glDeleteTextures( 1, &m_cache_tex );
++#if !defined HAVE_JWZGLES
+         ( *s_glDeleteFramebuffersEXT )( 1, &m_fb0 );
+         ( *s_glDeleteRenderbuffersEXT )( 1, &m_depth_rb );
++#endif
+     }
+ 
+     if( m_b_useFBO ) {
+         m_cache_tex_x = GetSize().x;
+         m_cache_tex_y = GetSize().y;
+ 
++#if !defined HAVE_JWZGLES
+         ( *s_glGenFramebuffersEXT )( 1, &m_fb0 );
+         glGenTextures( 1, &m_cache_tex );
+         ( *s_glGenRenderbuffersEXT )( 1, &m_depth_rb );
+ 
+         ( *s_glBindFramebufferEXT )( GL_FRAMEBUFFER_EXT, m_fb0 );
++#endif
+ 
+ // initialize color texture
+ 
+@@ -12023,6 +12048,7 @@
+         glTexParameteri( m_TEX_TYPE, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+         glTexImage2D( m_TEX_TYPE, 0, GL_RGBA, m_cache_tex_x, m_cache_tex_y, 0, GL_RGBA,
+                       GL_UNSIGNED_BYTE, NULL );
++#if !defined HAVE_JWZGLES
+         ( *s_glFramebufferTexture2DEXT )( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, m_TEX_TYPE,
+                                           m_cache_tex, 0 );
+ 
+@@ -12035,6 +12061,7 @@
+             // Can we attach to depth and stencil at once?  Maybe
+             // it would be easier to not check for this extension and
+             // always use 2 calls.
++
+             if( QueryExtension( "GL_ARB_framebuffer_object" ) ) {
+                 ( *s_glFramebufferRenderbufferEXT )( GL_FRAMEBUFFER_EXT,
+                                                      GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER_EXT, m_depth_rb );
+@@ -12045,7 +12072,6 @@
+                 ( *s_glFramebufferRenderbufferEXT )( GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT,
+                                                      GL_RENDERBUFFER_EXT, m_depth_rb );
+             }
+-
+         } else {
+             // initialize depth renderbuffer
+             ( *s_glBindRenderbufferEXT )( GL_RENDERBUFFER_EXT, m_depth_rb );
+@@ -12056,6 +12082,7 @@
+         }
+ 
+         ( *s_glBindFramebufferEXT )( GL_FRAMEBUFFER_EXT, 0 );
++#endif
+     }
+ 
+ }
+@@ -12081,7 +12108,11 @@
+     if( !m_bsetup ) {
+ 
+         char render_string[80];
++#ifdef HAVE_JWZGLES
++	strncpy( render_string, "Mesa", 5 );
++#else
+         strncpy( render_string, (char *) glGetString( GL_RENDERER ), 79 );
++#endif
+         m_renderer = wxString( render_string, wxConvUTF8 );
+ 
+         wxString msg;
+@@ -12095,6 +12126,7 @@
+         //  We need to not do anything that requires (some) complicated stencil operations.
+ 
+         bool bad_stencil_code = false;
++#if !defined HAVE_JWZGLES
+         if( GetRendererString().Find( _T("Intel") ) != wxNOT_FOUND ) {
+             wxLogMessage( _T("OpenGL-> Detected Intel renderer, disabling stencil buffer") );
+             bad_stencil_code = true;
+@@ -12110,11 +12142,14 @@
+         GLboolean stencil = glIsEnabled( GL_STENCIL_TEST );
+         int sb;
+         glGetIntegerv( GL_STENCIL_BITS, &sb );
+-        //        printf("Stencil Buffer Available: %d\nStencil bits: %d\n", stencil, sb);
++                  printf("Stencil Buffer Available: %d\nStencil bits: %d\n", stencil, sb);
++#endif
+         glDisable( GL_STENCIL_TEST );
+ 
+         g_b_useStencil = false;
++#if !defined HAVE_JWZGLES
+         if( !bad_stencil_code && stencil && ( sb == 8 ) ) g_b_useStencil = true;
++#endif
+ 
+ //          GLenum err = glewInit();
+ //           if (GLEW_OK != err)
+@@ -12122,12 +12157,12 @@
+         m_b_useFBO = false;              // default is false
+ 
+         //      We require certain extensions to support FBO rendering
++#if !defined HAVE_JWZGLES
+         if( QueryExtension( "GL_ARB_texture_rectangle" )
+                 && QueryExtension( "GL_EXT_framebuffer_object" ) ) {
+-            m_TEX_TYPE = GL_TEXTURE_RECTANGLE_ARB;
++            //m_TEX_TYPE = GL_TEXTURE_RECTANGLE_ARB;
+             m_b_useFBO = true;
+         }
+-
+         if( GetRendererString().Find( _T("Intel") ) != wxNOT_FOUND ) {
+             wxLogMessage( _T("OpenGL-> Detected Intel renderer, disabling FBO") );
+             m_b_useFBO = false;
+@@ -12155,6 +12190,7 @@
+                 m_b_useFBO = false;
+             }
+         }
++#endif
+ 
+         if( m_b_useFBO && !m_b_useFBOStencil ) g_b_useStencil = false;
+ 
+@@ -12302,9 +12338,11 @@
+             wxLogMessage( msg );
+         }
+ 
++#if !defined HAVE_JWZGLES
+         //    Upload to GPU?
+         if( level >= base_level ) glTexImage2D( GL_TEXTURE_2D, level - base_level, FORMAT_INTERNAL,
+                                                     width, height, 0, FORMAT_BITS, GL_UNSIGNED_BYTE, ptd->map_array[level] );
++#endif
+ 
+         width /= 2;
+         height /= 2;
+@@ -12312,10 +12350,12 @@
+         level++;
+     }
+ 
++#if !defined HAVE_JWZGLES
+     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_LOD, 0 );
+     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAX_LOD, level - base_level - 1 );
+     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0 );
+     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, level - base_level - 1 );
++#endif
+ 
+     ptd->GPU_base = n_basemult;
+ 
+@@ -13111,8 +13151,10 @@
+                     if( cc1->m_pQuilt->IsVPBlittable( VPoint, dx, dy, true ) ) // allow vector charts
+                     {
+                         if( dx || dy ) {
++#if !defined HAVE_JWZGLES
+                             //    Render the reuseable portion of the cached texture
+                             ( *s_glBindFramebufferEXT )( GL_FRAMEBUFFER_EXT, m_fb0 );
++#endif
+ 
+                             //      Make a new temporary texture, and bind to FBO
+                             glGenTextures( 1, &m_blit_tex );
+@@ -13122,8 +13164,10 @@
+                             glTexParameteri( m_TEX_TYPE, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+                             glTexImage2D( m_TEX_TYPE, 0, GL_RGBA, m_cache_tex_x, m_cache_tex_y, 0,
+                                           GL_RGBA, GL_UNSIGNED_BYTE, NULL );
++#if !defined HAVE_JWZGLES
+                             ( *s_glFramebufferTexture2DEXT )( GL_FRAMEBUFFER_EXT,
+                                                               GL_COLOR_ATTACHMENT0_EXT, m_TEX_TYPE, m_blit_tex, 0 );
++#endif
+ 
+                             glBindTexture( m_TEX_TYPE, m_cache_tex );
+                             glEnable( m_TEX_TYPE );
+@@ -13136,6 +13180,7 @@
+ 
+                             // Render the cached texture as quad to FBO(m_blit_tex) with offsets
+ 
++#if !defined HAVE_JWZGLES
+                             if( GL_TEXTURE_RECTANGLE_ARB == m_TEX_TYPE ) {
+                                 wxASSERT(sx == m_cache_tex_x);
+                                 wxASSERT(sy == m_cache_tex_y);
+@@ -13169,6 +13214,7 @@
+                                 glVertex2f( x2, y2 + oh );
+                                 glEnd();
+                             }
++#endif
+ 
+                             //calculate the new regions to render
+                             wxRegion update_region;
+@@ -13193,9 +13239,11 @@
+                             //    And make the blit texture "become" the cached texture
+                             m_cache_tex = m_blit_tex;
+ 
++#if !defined HAVE_JWZGLES
+                             //   Attach the renamed "blit" texture to the FBO
+                             ( *s_glFramebufferTexture2DEXT )( GL_FRAMEBUFFER_EXT,
+                                                               GL_COLOR_ATTACHMENT0_EXT, m_TEX_TYPE, m_cache_tex, 0 );
++#endif
+ 
+                             //      Render the chart(s) in update region
+                             RenderQuiltViewGL( VPoint, update_region, false );          // no clear wanted here
+@@ -13208,7 +13256,9 @@
+ 
+                     else              // not blitable
+                     {
++#if !defined HAVE_JWZGLES
+                         ( *s_glBindFramebufferEXT )( GL_FRAMEBUFFER_EXT, m_fb0 );
++#endif
+ 
+                         //      Delete the current cached texture
+                         glDeleteTextures( 1, &m_cache_tex );
+@@ -13221,8 +13271,10 @@
+                         glTexParameteri( m_TEX_TYPE, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+                         glTexImage2D( m_TEX_TYPE, 0, GL_RGBA, m_cache_tex_x, m_cache_tex_y, 0,
+                                       GL_RGBA, GL_UNSIGNED_BYTE, NULL );
++#if !defined HAVE_JWZGLES
+                         ( *s_glFramebufferTexture2DEXT )( GL_FRAMEBUFFER_EXT,
+                                                           GL_COLOR_ATTACHMENT0_EXT, m_TEX_TYPE, m_cache_tex, 0 );
++#endif
+ 
+                         //      Render the chart(s)
+                         RenderQuiltViewGL( VPoint, chart_get_region );
+@@ -13234,7 +13286,9 @@
+                 }
+             } else      //cached texture is not valid
+             {
++#if !defined HAVE_JWZGLES
+                 ( *s_glBindFramebufferEXT )( GL_FRAMEBUFFER_EXT, m_fb0 );
++#endif
+ 
+                 //      Delete the current cached texture
+                 glDeleteTextures( 1, &m_cache_tex );
+@@ -13247,8 +13301,10 @@
+                 glTexParameteri( m_TEX_TYPE, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+                 glTexImage2D( m_TEX_TYPE, 0, GL_RGBA, m_cache_tex_x, m_cache_tex_y, 0, GL_RGBA,
+                               GL_UNSIGNED_BYTE, NULL );
++#if !defined HAVE_JWZGLES
+                 ( *s_glFramebufferTexture2DEXT )( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
+                                                   m_TEX_TYPE, m_cache_tex, 0 );
++#endif
+ 
+                 //      Render the chart(s)
+                 RenderQuiltViewGL( VPoint, chart_get_region );
+@@ -13256,7 +13312,9 @@
+             }
+ 
+             // Disable Render to FBO
++#if !defined HAVE_JWZGLES
+             ( *s_glBindFramebufferEXT )( GL_FRAMEBUFFER_EXT, 0 );
++#endif
+             glDisable( GL_DEPTH_TEST );
+ 
+             // Render the cached texture as quad to screen
+@@ -13264,6 +13322,7 @@
+             glEnable( m_TEX_TYPE );
+             glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
+ 
++#if !defined HAVE_JWZGLES
+             if( GL_TEXTURE_RECTANGLE_ARB == m_TEX_TYPE ) {
+                 glBegin( GL_QUADS );
+                 glTexCoord2f( 0, m_cache_tex_y );
+@@ -13276,6 +13335,7 @@
+                 glVertex2f( 0, sy );
+                 glEnd();
+             }
++#endif
+             glDisable( m_TEX_TYPE );
+ 
+             m_gl_cache_vp = VPoint;
+@@ -13395,8 +13455,10 @@
+                 pattern[y * 4 + x] = mask;
+         }
+ 
++#if !defined HAVE_JWZGLES
+         glEnable( GL_POLYGON_STIPPLE );
+         glPolygonStipple( pattern );
++#endif
+         glBegin( GL_QUADS );
+         glColor3f( 0, 0, 0 );
+         glVertex2i( 0, 0 );
+@@ -15987,7 +16049,8 @@
+ 
+         else if( win->IsKindOf( CLASSINFO(wxBitmapComboBox) ) ) {
+ #if wxCHECK_VERSION(2,9,0)
+-            ((wxBitmapComboBox*)win)->GetTextCtrl()->SetBackgroundColour(col);
++            ( (wxBitmapComboBox*) win )->SetBackgroundColour( col );
++            //((wxBitmapComboBox*)win)->GetTextCtrl()->SetBackgroundColour(col);
+ #else
+             ( (wxBitmapComboBox*) win )->SetBackgroundColour( col );
+ #endif
+--- ../src/mygeom.cpp	2013-10-07 15:25:59.000000000 +0200
++++ ../src/mygeom.cpp	2013-10-07 15:26:51.000000000 +0200
+@@ -678,7 +678,9 @@
+     m_nvertex_max = 0;
+ 
+     m_ppg_head = new PolyTriGroup;
++#if !defined HAVE_JWZGLES
+     m_ppg_head->m_bSMSENC = s_bSENC_SM;
++#endif
+ 
+     m_ppg_head->nContours = ncnt;
+ 
+--- ../src/ocpndc.cpp	2013-10-07 15:27:54.000000000 +0200
++++ ../src/ocpndc.cpp	2013-10-07 15:44:18.000000000 +0200
+@@ -39,14 +39,24 @@
+ #ifdef __WXMSW__
+ #include "GL/gl.h"            // local copy for Windows
+ #else
++#if !defined HAVE_JWZGLES
+ #include <GL/gl.h>
++#else
++extern "C" {
++#include <GLES/gl.h>
++#include "jwzgles.h"
++}
++#endif
+ #endif
+ 
+ #include <wx/glcanvas.h>
+ #include <wx/graphics.h>
+ #include <wx/dcclient.h>
+ 
++#define APIENTRY
++#if !defined HAVE_JWZGLES
+ #include <GL/glu.h>
++#endif
+ #include <vector>
+ 
+ #include "ocpndc.h"
+@@ -122,7 +132,9 @@
+         glEnable( GL_BLEND );
+         glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+         glHint( GL_LINE_SMOOTH_HINT, GL_NICEST );
++#if !defined HAVE_JWZGLES
+         glHint( GL_POLYGON_SMOOTH_HINT, GL_NICEST );
++#endif
+     } else {
+         glDisable( GL_LINE_SMOOTH );
+         glDisable( GL_POLYGON_SMOOTH );
+@@ -188,6 +200,7 @@
+ 
+ void ocpnDC::SetGLStipple() const
+ {
++#if !defined HAVE_JWZGLES
+     switch( m_pen.GetStyle() ) {
+         case wxDOT: {
+             glLineStipple( 1, 0x3333 );
+@@ -211,6 +224,7 @@
+         }
+         default: break;
+     }
++#endif
+ }
+ 
+ // Draws a line between (x1,y1) - (x2,y2) with a start thickness of t1
+@@ -591,16 +605,20 @@
+ 
+         if( ConfigureBrush() ) {
+             glBegin( GL_TRIANGLE_FAN );
++#if !defined HAVE_JWZGLES
+             glVertex2d( cx, cy );
+             for( double a = 0; a <= 2 * M_PI; a += 2 * M_PI / 20 )
+                 glVertex2d( cx + r1 * sin( a ), cy + r2 * cos( a ) );
++#endif
+             glEnd();
+         }
+ 
+         if( ConfigurePen() ) {
+             glBegin( GL_LINE_STRIP );
++#if !defined HAVE_JWZGLES
+             for( double a = 0; a <= 2 * M_PI; a += 2 * M_PI / 200 )
+                 glVertex2d( cx + r1 * sin( a ), cy + r2 * cos( a ) );
++#endif
+             glEnd();
+         }
+ 
+@@ -668,13 +686,19 @@
+ {
+ 	GLvertex* vertex;
+ 	vertex = (GLvertex*) arg;
++#if !defined HAVE_JWZGLES
+     glVertex2d( vertex->info.x, vertex->info.y );
++#endif
+ }
+ 
+ void APIENTRY ocpnDCerrorCallback( GLenum errorCode )
+ {
+    const GLubyte *estring;
++#if !defined HAVE_JWZGLES
+    estring = gluErrorString(errorCode);
++#else
++   estring = "";
++#endif
+    wxLogMessage( _T("OpenGL Tessellation Error: %s"), estring );
+ }
+ 
+@@ -700,6 +724,7 @@
+         glPushAttrib( GL_COLOR_BUFFER_BIT | GL_LINE_BIT | GL_HINT_BIT | GL_POLYGON_BIT ); //Save state
+         SetGLAttrs( false );
+ 
++#if !defined HAVE_JWZGLES
+         static GLUtesselator *tobj = NULL;
+         if( ! tobj ) tobj = gluNewTess();
+ 
+@@ -730,6 +755,7 @@
+             gluTessEndContour( tobj );
+             gluTessEndPolygon( tobj );
+         }
++#endif
+ 
+ 		glPopAttrib();
+ 
+@@ -814,10 +840,12 @@
+             GLDrawBlendData( x, y, w, h, GL_RGBA, e );
+             delete[] ( e );
+         } else {
++#if !defined HAVE_JWZGLES
+             glRasterPos2i( x, y );
+             glPixelZoom( 1, -1 ); /* draw data from top to bottom */
+             glDrawPixels( w, h, GL_RGB, GL_UNSIGNED_BYTE, image.GetData() );
+             glPixelZoom( 1, 1 );
++#endif
+         }
+     }
+ }
+@@ -920,10 +948,12 @@
+ 
+     glEnable( GL_BLEND );
+     glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
++#if !defined HAVE_JWZGLES
+     glRasterPos2i( x, y );
+     glPixelZoom( 1, -1 );
+     glDrawPixels( w, h, format, GL_UNSIGNED_BYTE, data );
+     glPixelZoom( 1, 1 );
++#endif
+     glDisable( GL_BLEND );
+ 
+     return;
+--- ../src/options.cpp	2013-10-22 21:49:37.329381059 +0200
++++ ../src/options.cpp	2013-10-22 21:49:57.201134853 +0200
+@@ -816,13 +816,13 @@
+         renderer_dc.SelectObject(unchecked_bmp);
+         renderer_dc.SetBackground(*wxTheBrushList->FindOrCreateBrush(GetBackgroundColour(), wxSOLID));
+         renderer_dc.Clear();
+-        wxRendererNative::Get().DrawCheckBox(this, renderer_dc, wxRect(0, 0, 16, 16), 0);
++        //wxRendererNative::Get().DrawCheckBox(this, renderer_dc, wxRect(0, 0, 16, 16), 0);
+         
+         // Checked
+         renderer_dc.SelectObject(checked_bmp);
+         renderer_dc.SetBackground(*wxTheBrushList->FindOrCreateBrush(GetBackgroundColour(), wxSOLID));
+         renderer_dc.Clear();
+-        wxRendererNative::Get().DrawCheckBox(this, renderer_dc, wxRect(0, 0, 16, 16), wxCONTROL_CHECKED);
++        //wxRendererNative::Get().DrawCheckBox(this, renderer_dc, wxRect(0, 0, 16, 16), wxCONTROL_CHECKED);
+     }
+  
+     wxImageList *imglist = new wxImageList( 16, 16, true, 1 );
+--- ../src/s52plib.cpp	2013-10-07 15:47:28.000000000 +0200
++++ ../src/s52plib.cpp	2013-10-07 16:02:00.000000000 +0200
+@@ -1424,6 +1424,7 @@
+ 
+                         glEnable( GL_BLEND );
+                         glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
++#if !defined HAVE_JWZGLES
+                         glPixelZoom( 1, -1 );
+ 
+                         glPushClientAttrib( GL_CLIENT_PIXEL_STORE_BIT );
+@@ -1437,10 +1438,14 @@
+ 
+                         glDrawPixels( draw_width, draw_height, GL_RGBA, GL_UNSIGNED_BYTE,
+                                 ptext->m_pRGBA );
++
+                         glPixelZoom( 1, 1 );
++#endif
+                         glDisable( GL_BLEND );
+ 
++#if !defined HAVE_JWZGLES
+                         glPopClientAttrib();
++#endif
+                     }
+                 } // bdraw
+ 
+@@ -2067,10 +2072,12 @@
+ 
+         glEnable( GL_BLEND );
+         glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
++#if !defined HAVE_JWZGLES
+         glRasterPos2f( r.x - ddx, r.y - ddy );
+         glPixelZoom( 1, -1 );
+         glDrawPixels( b_width, b_height, GL_RGBA, GL_UNSIGNED_BYTE, prule->pixelPtr );
+         glPixelZoom( 1, 1 );
++#endif
+         glDisable( GL_BLEND );
+ 
+     } else {
+@@ -2242,10 +2249,12 @@
+         } else
+             glLineWidth( wxMax(g_GLMinLineWidth, 1) );
+ 
++#if !defined HAVE_JWZGLES
+         if( !strncmp( str, "DASH", 4 ) ) {
+             glLineStipple( 1, 0x3F3F );
+             glEnable( GL_LINE_STIPPLE );
+         }
++#endif
+ 
+     }
+ 
+@@ -2381,6 +2390,7 @@
+     }
+ 
+     else
++#if !defined HAVE_JWZGLES
+         if( rzRules->obj->pPolyTessGeo ) {
+             if( !rzRules->obj->pPolyTessGeo->IsOk() ) // perform deferred tesselation
+             rzRules->obj->pPolyTessGeo->BuildTessGL();
+@@ -2438,6 +2448,7 @@
+         }
+ 
+         else
++#endif
+             if( rzRules->obj->pPolyTrapGeo ) {
+                 if( !rzRules->obj->pPolyTrapGeo->IsOk() ) rzRules->obj->pPolyTrapGeo->BuildTess();
+ 
+@@ -2639,8 +2650,9 @@
+         }
+         free( ptp );
+     }
+-
++#if !defined HAVE_JWZGLES
+     else
++
+         if( rzRules->obj->pPolyTessGeo ) {
+             if( !rzRules->obj->pPolyTessGeo->IsOk() ) // perform deferred tesselation
+             rzRules->obj->pPolyTessGeo->BuildTessGL();
+@@ -2673,7 +2685,7 @@
+                 ctr_offset += npt * 2;
+             }
+         }
+-
++#endif
+         else
+             if( rzRules->obj->pPolyTrapGeo ) {
+                 if( !rzRules->obj->pPolyTrapGeo->IsOk() ) rzRules->obj->pPolyTrapGeo->BuildTess();
+@@ -3244,8 +3256,10 @@
+             if( sectr1 > sectr2 ) sectr2 += 360;
+ 
+             glBegin( GL_LINE_STRIP );
++#if !defined HAVE_JWZGLES
+             for( double a = sectr1 * M_PI / 180.0; a <= sectr2 * M_PI / 180.; a += 2 * M_PI / 200 )
+                 glVertex2d( rad * sin( a ), -rad * cos( a ) );
++#endif
+             glEnd();
+ 
+             //    Draw narrower color arc, overlaying the drawn outline.
+@@ -3254,8 +3268,10 @@
+             glLineWidth( wxMax(g_GLMinLineWidth, (float)arc_width + 0.8) );
+ 
+             glBegin( GL_LINE_STRIP );
++#if !defined HAVE_JWZGLES
+             for( double a = sectr1 * M_PI / 180.0; a <= sectr2 * M_PI / 180.; a += 2 * M_PI / 200 )
+                 glVertex2d( rad * sin( a ), -rad * cos( a ) );
++#endif
+             glEnd();
+ 
+             //    Draw the sector legs
+@@ -3266,8 +3282,10 @@
+                 glColor4ub( c.Red(), c.Green(), c.Blue(), c.Alpha() );
+                 glLineWidth( wxMax(g_GLMinLineWidth, (float)0.7) );
+ 
++#if !defined HAVE_JWZGLES
+                 glLineStipple( 1, 0x3F3F );
+                 glEnable( GL_LINE_STIPPLE );
++#endif
+ 
+                 double a = ( sectr1 - 90 ) * PI / 180;
+                 int x = (int) ( leg_len * cos( a ) );
+@@ -3285,7 +3303,9 @@
+                 glVertex2i( x, y );
+                 glEnd();
+ 
++#if !defined HAVE_JWZGLES
+                 glDisable( GL_LINE_STIPPLE );
++#endif
+ 
+             }
+ 
+@@ -4779,6 +4799,7 @@
+         cp.B = c->B;
+     }
+ 
++#if !defined HAVE_JWZGLES
+     if( obj->pPolyTessGeo ) {
+         if( !rzRules->obj->pPolyTessGeo->IsOk() ) // perform deferred tesselation
+         rzRules->obj->pPolyTessGeo->BuildTessGL();
+@@ -4871,8 +4892,8 @@
+         free( ptp );
+         free( pp3 );
+     } // if pPolyTessGeo
+-
+     else
++#endif
+         if( obj->pPolyTrapGeo ) {
+             if( !rzRules->obj->pPolyTrapGeo->IsOk() ) rzRules->obj->pPolyTrapGeo->BuildTess();
+ 
+@@ -4947,6 +4968,7 @@
+ 
+ int s52plib::RenderToGLAC( ObjRazRules *rzRules, Rules *rules, ViewPort *vp )
+ {
++#if 0
+     S52color *c;
+     char *str = (char*) rules->INSTstr;
+ 
+@@ -4957,7 +4979,9 @@
+     wxBoundingBox BBView = vp->GetBBox();
+     if( rzRules->obj->pPolyTessGeo ) {
+         if( !rzRules->obj->pPolyTessGeo->IsOk() ) // perform deferred tesselation
++#if !defined HAVE_JWZGLES
+         rzRules->obj->pPolyTessGeo->BuildTessGL();
++#endif
+ 
+         wxPoint *ptp = (wxPoint *) malloc(
+                 ( rzRules->obj->pPolyTessGeo->GetnVertexMax() + 1 ) * sizeof(wxPoint) );
+@@ -5036,7 +5060,6 @@
+         free( ptp );
+     } // if pPolyTessGeo
+ 
+-#if 0
+     //    At very small scales, the object could be visible on both the left and right sides of the screen.
+     //    Identify this case......
+     if(vp->chart_scale > 5e7)
+@@ -5082,7 +5105,9 @@
+     wxPoint *ptp;
+     if( rzRules->obj->pPolyTessGeo ) {
+         if( !rzRules->obj->pPolyTessGeo->IsOk() ) // perform deferred tesselation
++#if !defined HAVE_JWZGLES
+         rzRules->obj->pPolyTessGeo->BuildTessGL();
++#endif
+ 
+         ptp = (wxPoint *) malloc(
+                 ( rzRules->obj->pPolyTessGeo->GetnVertexMax() + 1 ) * sizeof(wxPoint) );
+@@ -6505,13 +6530,21 @@
+         glBegin( GL_QUADS );
+ 
+         glTexCoord2fv( tgvi->t0 );
++#if !defined HAVE_JWZGLES
+         glVertex2sv( tgvi->v0 );
++#endif
+         glTexCoord2fv( tgvi->t1 );
++#if !defined HAVE_JWZGLES
+         glVertex2sv( tgvi->v1 );
++#endif
+         glTexCoord2fv( tgvi->t2 );
++#if !defined HAVE_JWZGLES
+         glVertex2sv( tgvi->v2 );
++#endif
+         glTexCoord2fv( tgvi->t3 );
++#if !defined HAVE_JWZGLES
+         glVertex2sv( tgvi->v3 );
++#endif
+ 
+         glEnd();
+         glTranslatef( tgvi->advance, 0.0, 0.0 );
+@@ -6543,7 +6576,9 @@
+             switch( string[i + 1] ){
+                 case 'M':
+                     mode = MONO;
++#if !defined HAVE_JWZGLES
+                     glColor3ubv( (GLubyte *) &string[i + 2] );
++#endif
+                     i += 4;
+                     break;
+                 case 'T':
+@@ -6570,52 +6605,84 @@
+                 case TOP_BOTTOM:
+                     tgvi = getTCVI( txf, string[i] );
+                     glBegin( GL_QUADS );
+-                    glColor3ubv( c[0] );
++#if !defined HAVE_JWZGLES
++                    //glColor3ubv( c[0] );
++#endif
+                     glTexCoord2fv( tgvi->t0 );
+-                    glVertex2sv( tgvi->v0 );
++#if !defined HAVE_JWZGLES
++                    //glVertex2sv( tgvi->v0 );
++#endif
+                     glTexCoord2fv( tgvi->t1 );
+-                    glVertex2sv( tgvi->v1 );
+-                    glColor3ubv( c[1] );
++#if !defined HAVE_JWZGLES
++                    //glVertex2sv( tgvi->v1 );
++#endif
++#if !defined HAVE_JWZGLES
++                    //glColor3ubv( c[1] );
++#endif
+                     glTexCoord2fv( tgvi->t2 );
+-                    glVertex2sv( tgvi->v2 );
++#if !defined HAVE_JWZGLES
++                    //glVertex2sv( tgvi->v2 );
++#endif
+                     glTexCoord2fv( tgvi->t3 );
+-                    glVertex2sv( tgvi->v3 );
++#if !defined HAVE_JWZGLES
++                    //glVertex2sv( tgvi->v3 );
++#endif
+                     glEnd();
+                     glTranslatef( tgvi->advance, 0.0, 0.0 );
+                     break;
+                 case LEFT_RIGHT:
+                     tgvi = getTCVI( txf, string[i] );
+                     glBegin( GL_QUADS );
+-                    glColor3ubv( c[0] );
++#if !defined HAVE_JWZGLES
++                    //glColor3ubv( c[0] );
++#endif
+                     glTexCoord2fv( tgvi->t0 );
+-                    glVertex2sv( tgvi->v0 );
+-                    glColor3ubv( c[1] );
++#if !defined HAVE_JWZGLES
++                    //glVertex2sv( tgvi->v0 );
++                    //glColor3ubv( c[1] );
++#endif
+                     glTexCoord2fv( tgvi->t1 );
+-                    glVertex2sv( tgvi->v1 );
+-                    glColor3ubv( c[1] );
++#if !defined HAVE_JWZGLES
++                    //glVertex2sv( tgvi->v1 );
++                    //glColor3ubv( c[1] );
++#endif
+                     glTexCoord2fv( tgvi->t2 );
+-                    glVertex2sv( tgvi->v2 );
+-                    glColor3ubv( c[0] );
++#if !defined HAVE_JWZGLES
++                    //glVertex2sv( tgvi->v2 );
++                    //glColor3ubv( c[0] );
++#endif
+                     glTexCoord2fv( tgvi->t3 );
+-                    glVertex2sv( tgvi->v3 );
++#if !defined HAVE_JWZGLES
++                    //glVertex2sv( tgvi->v3 );
++#endif
+                     glEnd();
+                     glTranslatef( tgvi->advance, 0.0, 0.0 );
+                     break;
+                 case FOUR:
+                     tgvi = getTCVI( txf, string[i] );
+                     glBegin( GL_QUADS );
+-                    glColor3ubv( c[0] );
++#if !defined HAVE_JWZGLES
++                    //glColor3ubv( c[0] );
++#endif
+                     glTexCoord2fv( tgvi->t0 );
+-                    glVertex2sv( tgvi->v0 );
+-                    glColor3ubv( c[1] );
++#if !defined HAVE_JWZGLES
++                    //glVertex2sv( tgvi->v0 );
++                    //glColor3ubv( c[1] );
++#endif
+                     glTexCoord2fv( tgvi->t1 );
+-                    glVertex2sv( tgvi->v1 );
+-                    glColor3ubv( c[2] );
++#if !defined HAVE_JWZGLES
++                    //glVertex2sv( tgvi->v1 );
++                    //glColor3ubv( c[2] );
++#endif
+                     glTexCoord2fv( tgvi->t2 );
+-                    glVertex2sv( tgvi->v2 );
+-                    glColor3ubv( c[3] );
++#if !defined HAVE_JWZGLES
++                    //glVertex2sv( tgvi->v2 );
++                    //glColor3ubv( c[3] );
++#endif
+                     glTexCoord2fv( tgvi->t3 );
+-                    glVertex2sv( tgvi->v3 );
++#if !defined HAVE_JWZGLES
++                    //glVertex2sv( tgvi->v3 );
++#endif
+                     glEnd();
+                     glTranslatef( tgvi->advance, 0.0, 0.0 );
+                     break;
+@@ -6746,8 +6813,10 @@
+         int noSegments = 2 + ( radius * 4 );
+         if( noSegments > 200 ) noSegments = 200;
+         glBegin( GL_LINE_STRIP );
++#if !defined HAVE_JWZGLES
+         for( double a = 0; a <= 2 * M_PI; a += 2 * M_PI / noSegments )
+             glVertex2d( center.x + radius * sin( a ), center.y + radius * cos( a ) );
++#endif
+         glEnd();
+     }
+     if( renderToGCDC ) {
+--- ../src/s57chart.cpp	2013-10-07 16:03:59.000000000 +0200
++++ ../src/s57chart.cpp	2013-10-07 16:05:59.000000000 +0200
+@@ -5644,6 +5644,7 @@
+ {
+     bool ret = false;
+ 
++#if !defined HAVE_JWZGLES
+     if( obj->pPolyTessGeo ) {
+         if( !obj->pPolyTessGeo->IsOk() ) obj->pPolyTessGeo->BuildTessGL();
+ 
+@@ -5740,7 +5741,9 @@
+ 
+     }           // if pPolyTessGeo
+ 
+-    else if( obj->pPolyTrapGeo ) {
++    else
++#endif
++    if( obj->pPolyTrapGeo ) {
+         if( !obj->pPolyTrapGeo->IsOk() ) obj->pPolyTrapGeo->BuildTess();
+ 
+         PolyTrapGroup *ptg = obj->pPolyTrapGeo->Get_PolyTrapGroup_head();
+--- ../src/styles.cpp	2013-10-07 16:06:54.000000000 +0200
++++ ../src/styles.cpp	2013-09-27 16:08:07.000000000 +0200
+@@ -58,9 +58,9 @@
+ 
+     // Manual alpha blending for broken wxWidgets platforms.
+ 
+-    merged.UseAlpha();
+-    back.UseAlpha();
+-    front.UseAlpha();
++    //merged.UseAlpha();
++    //back.UseAlpha();
++    //front.UseAlpha();
+ 
+     wxImage im_front = front.ConvertToImage();
+     wxImage im_back = back.ConvertToImage();
+@@ -136,7 +136,7 @@
+     if( front.GetDepth() == 24 ) return front;
+ 
+     wxBitmap result( front.GetWidth(), front.GetHeight(), 24 );
+-    front.UseAlpha();
++    //front.UseAlpha();
+ 
+     wxImage im_front = front.ConvertToImage();
+     wxImage im_result = result.ConvertToImage();
