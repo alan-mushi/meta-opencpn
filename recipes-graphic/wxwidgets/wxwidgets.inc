@@ -8,23 +8,8 @@ FreeBSD, Solaris, HP-UX) and MacOS X (Carbon and Mach-0)."
 SECTION = "graphic"
 LICENSE = "wxWindows"
 LIC_FILES_CHKSUM = "file://docs/licence.txt;md5=18346072db6eb834b6edbd2cdc4f109b"
-PV = "3.0.0+svnr${SRCPV}"
-
-SRC_URI = "svn://svn.wxwidgets.org/svn/wx/wxWidgets/;protocol=http;module=trunk \
-           file://tiff_m4_acinclude_remove_AX_CHECK_GL.patch \
-           file://ax_check_gl.m4 \
-	   file://wxwidgets-svn_r74946-EGLX.patch \
-        "
-
-# for 'ac_raf_func_which_getservbyname_r.m4'
-SRC_URI[sha256sum] = "0099a0818673ccfea006fc1bbce98693e000d1385721b3a04d27cbbe16b043ff"
-# for 'wxwidgets-svn_r74946-EGLX.patch'
-SRC_URI[sha256sum] = "d943367d63462a24ec20693764d045ba8da94796de0217acbc46198e2f689896"
 
 inherit binconfig autotools
-
-S = "${WORKDIR}/trunk"
-SRCREV_default_pn-${PN} = "74946"
 
 RDEPENDS_${PN} = "gtk+3"
 
@@ -34,7 +19,7 @@ PACKAGES = "${PN} ${PN}-dev ${PN}-dbg"
 
 EXTRA_OECONF = "OPENGL_LIBS='-lEGLX -ljwzgles' \
 		--with-gtk=3 \
-                --enable-utf8 \
+                --disable-utf8 \
                 --disable-stl \
                 --disable-display \
                 --disable-mediactrl \
@@ -45,7 +30,7 @@ EXTRA_OECONF = "OPENGL_LIBS='-lEGLX -ljwzgles' \
                 --disable-rpath \
 		--with-opengl \
 		--disable-detect_sm \
-		--disable-threads --enable-debug --enable-debug_gdb --disable-joystick"
+		"
 
 PACKAGECONFIG = "${@base_contains('DISTRO_FEATURES', 'x11', 'x11', '', d)}"
 #PACKAGECONFIG = "${@base_contains('DISTRO_FEATURES', 'egl', 'egl', '', d)}"
@@ -53,21 +38,6 @@ PACKAGECONFIG = "${@base_contains('DISTRO_FEATURES', 'wayland', 'wayland', '', d
 PACKAGECONFIG[x11] = "--with-x, --with-x=no --disable-stc, "
 #PACKAGECONFIG[egl] = "--with-opengl, --with-opengl=no, virtual/egl"
 PACKAGECONFIG[wayland] = "--with-x=no --disable-stc, , eglx"
-
-additionnal_patches () {
-    cp ${WORKDIR}/ax_check_gl.m4 ${S}/src/tiff/m4/
-    # The original Makefile.in does non-compatible things with cross-compilation, so let's use the previous version
-    sed -i "16104c\	(cd \$(DESTDIR)\$(bindir) && rm -f wx-config && \$(LN_S) ../\`basename \$(libdir)\`\/wx\/config\/\$(TOOLCHAIN_FULLNAME) wx-config)" ${S}/Makefile.in
-    sed -i -e "s/^LIBS = @LIBS@$/LIBS = @LIBS@ -lEGLX -ljwzgles \$(pkg-config --cflags --libs egl wayland-egl)/" ${S}/Makefile.in
-    #sed -i -e "s/^CFLAGS = @CFLAGS@$/CFLAGS = @CFLAGS@ -I${STAGING_INCDIR}/" ${S}/Makefile.in
-    #sed -i -e "s/^CPPFLAGS = @CPPFLAGS@$/CPPFLAGS = @CPPFLAGS@ -I${STAGING_INCDIR}/" ${S}/Makefile.in
-    #sed -i -e "s/^CXXFLAGS = @CXXFLAGS@$/CXXFLAGS = @CXXFLAGS@ -I${STAGING_INCDIR}/" ${S}/Makefile.in
-}
-
-# Moves the macro at the appropriate location.
-do_patch_append () {
-    bb.build.exec_func('additionnal_patches', d)
-}
 
 # We're obliged to overrides this because any call to autoheader
 # will result in "heavy failures".
@@ -83,25 +53,6 @@ autotools_do_configure () {
         oe_runconf
     fi
 }
-
-do_compile_append () {
-    # Building the examples
-    #for i in ${S}/samples ${S}/demos ; do
-    #for i in ${S}/samples; do
-    #    cd $i &&  make ${PARALLEL_MAKE}
-    #done
-
-    # The wx-config file in ${S} is actully a "proxy script" so let's overrides it with the final script.
-    # Isolate the path of the actual script.
-    if [ -f ${S}/wx-config.old ] ; then
-        wx_config_path=$(sed -n 37p ${S}/wx-config.old |sed "s/\$this_exec_prefix\///g" | cut -d \" -f 2)
-    else
-        wx_config_path=$(sed -n 37p ${S}/wx-config |sed "s/\$this_exec_prefix\///g" | cut -d \" -f 2)
-        mv ${S}/wx-config ${S}/wx-config.old
-    fi
-    cp -f ${S}/$wx_config_path ${S}/wx-config
-}
-
 do_install_append () {
     for i in $(find ${S}/demos/ ${S}/samples/ -type f -executable | egrep -v "\.[^/]+$") ; do
        cp $i ${D}${bindir}
