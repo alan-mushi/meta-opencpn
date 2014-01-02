@@ -27,13 +27,10 @@ DEPENDS = "expat libffi wayland-native"
 EXTRA_OECONF_virtclass-native = "--disable-documentation"
 EXTRA_OECONF = "--disable-documentation --disable-scanner"
 
-# Wayland installs a M4 macro for other projects to use. This M4 macro includes
-# a path to a Makefile fragment to get the rules to generate stubs from protocol
-# description files.  The paths to the sysroot end up incorrect, so fix them.
-#do_configure_append_class-native() {
-#  sed -e 's,@prefix@,${STAGING_DIR_NATIVE},g' \
-#      -e 's,@exec_prefix@,${STAGING_DIR_NATIVE},g' \
-#      -e 's,@bindir@,${STAGING_BINDIR_NATIVE},g' \
-#      -e 's,@datarootdir@,${STAGING_DATADIR_NATIVE},g' \
-#  ${S}/wayland-scanner.m4.in > ${B}/wayland-scanner.m4
-#}
+# Wayland installs a M4 macro for other projects to use, which uses the target
+# pkg-config to find files.  Replace pkg-config with pkg-config-native.
+do_install_append_class-native() {
+  sed -e 's,PKG_CHECK_MODULES(.*),,g' \
+      -e 's,$PKG_CONFIG,pkg-config-native,g' \
+      -i ${D}/${datadir}/aclocal/wayland-scanner.m4
+}
