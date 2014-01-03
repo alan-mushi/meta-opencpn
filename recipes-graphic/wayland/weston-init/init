@@ -29,12 +29,13 @@ case "$1" in
 
         # This is all a nasty hack
         if test -z "$XDG_RUNTIME_DIR"; then
-                export XDG_RUNTIME_DIR=/var/run/user/$USER
+                export XDG_RUNTIME_DIR=/var/run/user/opencpn
                 mkdir --parents $XDG_RUNTIME_DIR
                 chmod 0700 $XDG_RUNTIME_DIR
         fi
 
-        openvt -s weston
+        #openvt -s weston
+	su - opencpn -c "openvt -s weston-launch"
   ;;
 
   stop)

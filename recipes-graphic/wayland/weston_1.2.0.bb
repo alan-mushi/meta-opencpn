@@ -68,6 +68,12 @@ do_install_append() {
 		install -d ${D}${datadir}/icons/hicolor/48x48/apps
 		install ${WORKDIR}/weston.png ${D}${datadir}/icons/hicolor/48x48/apps
         fi
+
+	##################################
+	##     DEVEL                    ##
+	chown root ${bindir}/weston-launch
+	chmod +s ${bindir}/weston-launch
+	##################################
 }
 
 PACKAGES += "${PN}-examples"
